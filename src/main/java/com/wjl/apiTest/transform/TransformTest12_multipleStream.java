@@ -61,6 +61,7 @@ public class TransformTest12_multipleStream {
             }
         });
 
+        // connectstream数据类型可以不一致，但是只能二合一
         ConnectedStreams<Tuple2<String, Double>, SensorReading> connectedStreams = warningStream.connect(lowStream);
         DataStream<Object> resultStream = connectedStreams.map(new CoMapFunction<Tuple2<String, Double>, SensorReading, Object>() {
             @Override
@@ -74,6 +75,8 @@ public class TransformTest12_multipleStream {
             }
         });
 
+        // 联合多条流,union可以连接多个流，但是数据类型必须一致
+        highStream.union(lowStream);
         resultStream.print();
         env.execute();
     }
