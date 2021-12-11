@@ -12,6 +12,9 @@ public class SensorReading {
         this.temperature = temperature;
     }
 
+    public SensorReading() {
+    }
+
     public String getId() {
         return id;
     }
