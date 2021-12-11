@@ -3,13 +3,14 @@ package com.wjl.apiTest.transform;
 import com.wjl.apiTest.beans.SensorReading;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.iterators.CollatingIterator;
+import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.java.tuple.Tuple;
+import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.streaming.api.collector.selector.OutputSelector;
-import org.apache.flink.streaming.api.datastream.DataStream;
-import org.apache.flink.streaming.api.datastream.KeyedStream;
-import org.apache.flink.streaming.api.datastream.SplitStream;
+import org.apache.flink.streaming.api.datastream.*;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.hadoop.mapred.lib.InputSampler;
+import org.apache.flink.streaming.api.functions.co.CoMapFunction;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -51,5 +52,29 @@ public class TransformTest12_multipleStream {
         allStream.print("all");
         env.execute();
 
+        // 合流connect，将高温流转换成二元组类型，与低温流连接合并，s输出状态信息
+        DataStream<Tuple2<String,Double>> warningStream = highStream.map(new MapFunction<SensorReading, Tuple2<String,Double>>() {
+
+            @Override
+            public Tuple2<String, Double> map(SensorReading sensorReading) throws Exception {
+                return new Tuple2<>(sensorReading.getId(),sensorReading.getTemperature());
+            }
+        });
+
+        ConnectedStreams<Tuple2<String, Double>, SensorReading> connectedStreams = warningStream.connect(lowStream);
+        DataStream<Object> resultStream = connectedStreams.map(new CoMapFunction<Tuple2<String, Double>, SensorReading, Object>() {
+            @Override
+            public Object map1(Tuple2<String, Double> value) throws Exception {
+                return new Tuple3<>(value.f0, value.f1, "high temp waring");
+            }
+
+            @Override
+            public Object map2(SensorReading value) throws Exception {
+                return new Tuple2<>(value.getId(), "low temp waring");
+            }
+        });
+
+        resultStream.print();
+        env.execute();
     }
 }
