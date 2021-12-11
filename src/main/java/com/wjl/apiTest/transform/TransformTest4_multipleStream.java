@@ -16,7 +16,7 @@ import java.util.Collection;
 import java.util.Collections;
 
 
-public class TransformTest12_multipleStream {
+public class TransformTest4_multipleStream {
     public static void main(String[] args) throws Exception {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setParallelism(1);

@@ -1,7 +1,6 @@
 package com.wjl.apiTest.transform;
 
 import com.wjl.apiTest.beans.SensorReading;
-import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.functions.ReduceFunction;
 import org.apache.flink.api.java.tuple.Tuple;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -9,7 +8,7 @@ import org.apache.flink.streaming.api.datastream.KeyedStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
 
-public class TransformTest12_Aggregation {
+public class TransformTest3_reduce {
     public static void main(String[] args) throws Exception {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setParallelism(1);
@@ -29,13 +28,17 @@ public class TransformTest12_Aggregation {
 
         // 分组
         KeyedStream<SensorReading, Tuple> keyedStream = dataStream.keyBy("id");
-    //  KeyedStream<SensorReading, String> keyedStream = dataStream.keyBy(data->data.getId());
-    //  KeyedStream<SensorReading, String> keyedStream = dataStream.keyBy(SensorReading::getId);
-        // 输出最大的温度值并且其对应的时间戳
-        DataStream<SensorReading> resultStream = keyedStream.maxBy("temperature");
 
+        // reduce 聚合，取最大的温度值，并输出当前时间戳
+        DataStream<SensorReading> reduceStream = keyedStream.reduce(new ReduceFunction<SensorReading>() {
+            @Override
+            // v2是最新的值，v1是最新的状态
+            public SensorReading reduce(SensorReading v1, SensorReading v2) throws Exception {
+                return new SensorReading(v1.getId(), v2.getTimeStamp(), Math.max(v1.getTemperature(),v2.getTemperature()));
+            }
+        });
         // 打印输出
-        resultStream.print();
+        reduceStream.print();
         env.execute();
 
     }
