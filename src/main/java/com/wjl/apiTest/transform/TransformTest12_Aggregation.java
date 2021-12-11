@@ -31,7 +31,7 @@ public class TransformTest12_Aggregation {
         KeyedStream<SensorReading, Tuple> keyedStream = dataStream.keyBy("id");
     //  KeyedStream<SensorReading, String> keyedStream = dataStream.keyBy(data->data.getId());
     //  KeyedStream<SensorReading, String> keyedStream = dataStream.keyBy(SensorReading::getId);
-
+        // 输出最大的温度值并且其对应的时间戳
         DataStream<SensorReading> resultStream = keyedStream.maxBy("temperature");
 
         // 打印输出
