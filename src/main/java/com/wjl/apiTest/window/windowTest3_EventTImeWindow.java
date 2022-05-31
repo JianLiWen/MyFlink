@@ -17,7 +17,7 @@ import org.apache.flink.util.OutputTag;
  */
 public class windowTest3_EventTImeWindow {
     public static void main(String[] args) throws Exception {
-        StreamExecutionEnvironment env = new StreamExecutionEnvironment();
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setParallelism(1);
         env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
         // 周期性生成watermark
@@ -27,8 +27,8 @@ public class windowTest3_EventTImeWindow {
             String[] fields = line.split(",");
             return new SensorReading(fields[0], new Long(fields[1]), new Double(fields[2]));
         })
-                // 设置乱序数据事件事件戳和watermark
-                .assignTimestampsAndWatermarks(new BoundedOutOfOrdernessTimestampExtractor<SensorReading>(Time.seconds(2)) {
+        // 设置乱序数据事件事件戳和watermark
+        .assignTimestampsAndWatermarks(new BoundedOutOfOrdernessTimestampExtractor<SensorReading>(Time.seconds(2)) {
             @Override
             public long extractTimestamp(SensorReading element) {
                 return element.getTimeStamp() * 1000L;
@@ -46,7 +46,7 @@ public class windowTest3_EventTImeWindow {
         };
         // 基于事件时间的开窗集合,统计15秒内的温度最小值
         SingleOutputStreamOperator<SensorReading> minStream = dataStream.keyBy("id")
-                .timeWindow(Time.seconds(15))
+                .timeWindow(Time.seconds(5))
                 .allowedLateness(Time.minutes(1))
                 .sideOutputLateData(outputTag)
                 .minBy("temperature");

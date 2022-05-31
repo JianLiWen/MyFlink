@@ -11,6 +11,7 @@ import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.windowing.ProcessWindowFunction;
 import org.apache.flink.streaming.api.functions.windowing.WindowFunction;
+import org.apache.flink.streaming.api.windowing.assigners.TumblingProcessingTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
 import org.apache.flink.table.runtime.aggregate.AggregateAggFunction;
@@ -30,7 +31,8 @@ public class windowTest1_timeWindow {
         // 开窗测试 增量聚合函数
         DataStream<Integer> resultStream = dataStream.keyBy("id")
 //                .countWindow(3,2)
-                .timeWindow(Time.seconds(15))
+                .window(TumblingProcessingTimeWindows.of(Time.seconds(15)))
+//                .timeWindow(Time.seconds(15))
 //                .process(new ProcessWindowFunction<SensorReading, Object, Tuple, TimeWindow>() {
 //                })
                 .aggregate(new AggregateFunction<SensorReading, Integer, Integer>() {
